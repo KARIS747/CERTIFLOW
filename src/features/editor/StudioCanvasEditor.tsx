@@ -39,7 +39,14 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  Minimize2
+  Minimize2,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Crosshair,
+  Hand,
+  Move
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
@@ -97,6 +104,11 @@ export const StudioCanvasEditor: React.FC = () => {
   const [generatedCount, setGeneratedCount] = useState(0);
   const [zipBlob, setZipBlob] = useState<Blob | null>(null);
 
+  // Viewport & Pan/Navigation State (Left/Right & Top/Bottom scrolling)
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [isPanMode, setIsPanMode] = useState<boolean>(false);
+  const panStartRef = useRef<{ x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
+
   // Zoom & Workspace Expansion State
   const [zoomScale, setZoomScale] = useState<number>(0.65);
   const [isExpandedWorkspace, setIsExpandedWorkspace] = useState<boolean>(false);
@@ -113,6 +125,80 @@ export const StudioCanvasEditor: React.FC = () => {
       fabricCanvasRef.current.requestRenderAll();
     }
   };
+
+  // Directional Smooth Scroll Handler (Left, Right, Up, Down, Center)
+  const scrollCanvas = (direction: 'left' | 'right' | 'up' | 'down' | 'center') => {
+    if (!viewportRef.current) return;
+    const vp = viewportRef.current;
+    const step = 240;
+
+    if (direction === 'left') {
+      vp.scrollBy({ left: -step, behavior: 'smooth' });
+    } else if (direction === 'right') {
+      vp.scrollBy({ left: step, behavior: 'smooth' });
+    } else if (direction === 'up') {
+      vp.scrollBy({ top: -step, behavior: 'smooth' });
+    } else if (direction === 'down') {
+      vp.scrollBy({ top: step, behavior: 'smooth' });
+    } else if (direction === 'center') {
+      vp.scrollTo({
+        left: Math.max(0, (vp.scrollWidth - vp.clientWidth) / 2),
+        top: Math.max(0, (vp.scrollHeight - vp.clientHeight) / 2),
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Pan Handlers for Drag-to-Navigate
+  const handleViewportMouseDown = (e: React.MouseEvent) => {
+    if (isPanMode || e.button === 1) {
+      if (!viewportRef.current) return;
+      panStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        scrollLeft: viewportRef.current.scrollLeft,
+        scrollTop: viewportRef.current.scrollTop,
+      };
+    }
+  };
+
+  const handleViewportMouseMove = (e: React.MouseEvent) => {
+    if (!panStartRef.current || !viewportRef.current) return;
+    const dx = e.clientX - panStartRef.current.x;
+    const dy = e.clientY - panStartRef.current.y;
+    viewportRef.current.scrollLeft = panStartRef.current.scrollLeft - dx;
+    viewportRef.current.scrollTop = panStartRef.current.scrollTop - dy;
+  };
+
+  const handleViewportMouseUp = () => {
+    panStartRef.current = null;
+  };
+
+  // Keyboard shortcut for Spacebar Pan
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.code === 'Space' &&
+        (e.target as HTMLElement).tagName !== 'INPUT' &&
+        (e.target as HTMLElement).tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        setIsPanMode(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsPanMode(false);
+        panStartRef.current = null;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   // Canvas Initialization & High-DPI Rendering
   useEffect(() => {
@@ -655,6 +741,20 @@ export const StudioCanvasEditor: React.FC = () => {
               >
                 💎 100% Taille Réelle HD
               </button>
+              <button
+                onClick={() => setIsPanMode(!isPanMode)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border transition-colors text-[11px] font-bold ${
+                  isPanMode
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md shadow-amber-500/20'
+                    : isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                }`}
+                title="Activer le mode Main (Pan) pour glisser librement dans l'attestation (ou maintenez la touche Espace)"
+              >
+                <Hand className="w-3.5 h-3.5" />
+                Mode Main (Pan)
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -688,18 +788,94 @@ export const StudioCanvasEditor: React.FC = () => {
             </div>
           </div>
 
-          {/* Canvas Wrapper Box */}
-          <div className={`relative p-4 sm:p-6 border rounded-3xl shadow-2xl overflow-auto max-w-full flex justify-center ${
-            isLight ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900 border-slate-800'
-          }`}>
-            <div className="border border-slate-300/40 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-300" style={{ imageRendering: '-webkit-optimize-contrast' }}>
-              <canvas ref={canvasRef} className="block" />
+          {/* Canvas Scrollable Viewport with Left/Right & Top/Bottom Navigation */}
+          <div
+            ref={viewportRef}
+            onMouseDown={handleViewportMouseDown}
+            onMouseMove={handleViewportMouseMove}
+            onMouseUp={handleViewportMouseUp}
+            onMouseLeave={handleViewportMouseUp}
+            className={`studio-scroll-viewport relative w-full h-[560px] max-h-[68vh] border rounded-3xl shadow-2xl overflow-auto select-none transition-colors ${
+              isPanMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
+            } ${isLight ? 'bg-slate-200/90 border-slate-300' : 'bg-slate-900 border-slate-800'}`}
+          >
+            {/* Inner Centered Container */}
+            <div className="min-w-fit min-h-fit p-8 sm:p-14 flex items-center justify-center m-auto">
+              <div
+                className="border border-slate-300/40 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-200"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
+              >
+                <canvas ref={canvasRef} className="block" />
+              </div>
+            </div>
+
+            {/* Floating Navigation D-Pad & Controls Overlay */}
+            <div className="sticky bottom-4 left-4 z-20 inline-flex items-center gap-1.5 p-2 rounded-2xl bg-slate-900/90 dark:bg-slate-950/90 border border-slate-700/80 backdrop-blur-md shadow-2xl text-slate-200">
+              <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider px-1.5 flex items-center gap-1">
+                <Move className="w-3 h-3 text-indigo-400" />
+                Naviguer :
+              </span>
+
+              {/* Directional Buttons (Left, Up, Down, Right, Center) */}
+              <button
+                onClick={() => scrollCanvas('left')}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 text-slate-300 transition-colors"
+                title="Défiler vers la Gauche (⬅️)"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => scrollCanvas('up')}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 text-slate-300 transition-colors"
+                title="Défiler vers le Haut (⬆️)"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => scrollCanvas('down')}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 text-slate-300 transition-colors"
+                title="Défiler vers le Bas (⬇️)"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => scrollCanvas('right')}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 text-slate-300 transition-colors"
+                title="Défiler vers la Droite (➡️)"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="h-4 w-[1px] bg-slate-700 mx-1" />
+
+              <button
+                onClick={() => scrollCanvas('center')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] shadow-sm transition-colors"
+                title="Recadrer et centrer l'attestation"
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+                Centrer
+              </button>
             </div>
           </div>
 
-          <p className={`text-[11px] text-center font-medium ${t.textSecondary}`}>
-            Format A4 Paysage (297 x 210 mm) • Zoom actuel : <strong className="text-indigo-500">{Math.round(zoomScale * 100)}%</strong> • Double-cliquez pour éditer.
-          </p>
+          {/* Navigation Helper & Zoom Bar Info */}
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 px-1">
+            <p className={`text-[11px] font-medium flex items-center gap-1.5 ${t.textSecondary}`}>
+              <span>Format A4 Paysage (297 x 210 mm)</span>
+              <span>•</span>
+              <span>Zoom : <strong className="text-indigo-500 font-bold">{Math.round(zoomScale * 100)}%</strong></span>
+            </p>
+
+            <div className={`text-[11px] flex flex-wrap items-center gap-2 ${t.textMuted}`}>
+              <span>💡 <strong>Espace + Glisser</strong> pour naviguer</span>
+              <span>•</span>
+              <span><strong>Shift + Molette</strong> pour défilement horizontal</span>
+            </div>
+          </div>
         </div>
 
         {/* Right Inspector: Properties Panel (3 Cols) */}

@@ -93,7 +93,7 @@
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track {
   background: hsl(var(--scrollbar-track));
 }
@@ -103,6 +103,28 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--scrollbar-hover));
+}
+
+/* Studio Canvas Dedicated Viewport Scrollbars (Always visible & prominent) */
+.studio-scroll-viewport::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.studio-scroll-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+.dark .studio-scroll-viewport::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.8);
+}
+.studio-scroll-viewport::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.studio-scroll-viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.8);
 }
 
 /* =============================================
