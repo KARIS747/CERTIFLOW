@@ -58,7 +58,7 @@ export const Navbar: React.FC = () => {
         ? 'bg-white/90 border-slate-200/80 shadow-sm shadow-slate-200'
         : 'bg-slate-900/80 border-slate-800/80'
     }`}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className="w-full max-w-[1800px] mx-auto flex items-center justify-between gap-4">
 
         {/* Left: Brand Logo & Title */}
         <div className="flex items-center gap-4">
@@ -88,7 +88,7 @@ export const Navbar: React.FC = () => {
 
           {/* Active Project Selector */}
           {activeProject && (
-            <div className={`hidden md:flex items-center gap-2 pl-4 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+            <div className={`hidden xl:flex items-center gap-2 pl-4 border-l ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
               <ChevronRight className={`w-4 h-4 ${isLight ? 'text-slate-400' : 'text-slate-600'}`} />
               <div className="relative">
                 <select
@@ -133,7 +133,7 @@ export const Navbar: React.FC = () => {
           {/* Demo button */}
           <button
             onClick={handleLoadDemo}
-            className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-200"
+            className="hidden min-[1700px]:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-600 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all duration-200"
             title="Charger un jeu de données de test avec 10 étudiants"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
@@ -194,7 +194,8 @@ interface NavTabProps {
 const NavTab: React.FC<NavTabProps> = ({ active, onClick, icon, label, badge, isLight }) => (
   <button
     onClick={onClick}
-    className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+    title={label}
+    className={`relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
       active
         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 font-semibold'
         : isLight
@@ -203,7 +204,7 @@ const NavTab: React.FC<NavTabProps> = ({ active, onClick, icon, label, badge, is
     }`}
   >
     {icon}
-    <span>{label}</span>
+    <span className="hidden 2xl:inline">{label}</span>
     {badge && (
       <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-bold ${
         active

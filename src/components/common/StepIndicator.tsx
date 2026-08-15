@@ -43,7 +43,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSel
   };
 
   return (
-    <div className={`w-full rounded-2xl p-3 shadow-sm my-4 border ${
+    <div className={`w-full rounded-2xl p-2.5 shadow-sm my-2 border ${
       isLight ? 'bg-white border-slate-200' : 'bg-slate-900/40 border-slate-800/80'
     }`}>
       <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">

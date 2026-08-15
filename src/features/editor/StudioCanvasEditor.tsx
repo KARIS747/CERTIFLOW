@@ -166,6 +166,16 @@ export const StudioCanvasEditor: React.FC = () => {
     }
   };
 
+  // Auto-fit the A4 canvas to the available viewport space
+  const fitToView = () => {
+    if (!viewportRef.current || !fabricCanvasRef.current) return;
+    const vp = viewportRef.current;
+    const availW = Math.max(vp.clientWidth - 80, 300);
+    const availH = Math.max(vp.clientHeight - 56, 200);
+    const scale = Math.min(availW / 1123, availH / 794, 1);
+    applyZoom(Math.max(scale, 0.35));
+  };
+
   // Directional Smooth Scroll Handler (Left, Right, Up, Down, Center)
   const scrollCanvas = (direction: 'left' | 'right' | 'up' | 'down' | 'center') => {
     if (!viewportRef.current) return;
@@ -296,6 +306,25 @@ export const StudioCanvasEditor: React.FC = () => {
       fabricCanvasRef.current = null;
     };
   }, [activeTemplate?.id, selectedStudentId]);
+
+  // Auto-fit canvas to viewport on mount and whenever the viewport resizes
+  useEffect(() => {
+    const t = setTimeout(() => fitToView(), 60);
+    const vp = viewportRef.current;
+    if (!vp) return () => clearTimeout(t);
+
+    let raf = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => fitToView());
+    });
+    ro.observe(vp);
+    return () => {
+      clearTimeout(t);
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [activeTemplate?.id]);
 
   const renderTemplateElements = (canvas: fabric.Canvas) => {
     if (!activeTemplate) return;
@@ -555,12 +584,12 @@ export const StudioCanvasEditor: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="flex flex-col space-y-3" style={{ height: 'calc(100vh - 150px)', minHeight: 440 }}>
       {/* Workflow Step Header */}
       <StepIndicator currentStep={4} />
 
       {/* Top Action & Preview Controls */}
-      <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border backdrop-blur-md shadow-md ${
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3 rounded-2xl border backdrop-blur-md shadow-md ${
         isLight ? 'bg-white border-slate-200 shadow-slate-200' : 'bg-slate-900/60 border-slate-800'
       }`}>
         {/* Template Selector & Live Preview Student Dropdown */}
@@ -570,7 +599,7 @@ export const StudioCanvasEditor: React.FC = () => {
             <select
               value={activeTemplate?.id || ''}
               onChange={(e) => setActiveTemplateId(e.target.value)}
-              className={`text-xs font-bold rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              className={`text-xs font-bold rounded-xl px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                 isLight ? 'bg-slate-100 border-slate-300 text-slate-900' : 'bg-slate-800 text-slate-100 border-slate-700'
               }`}
             >
@@ -588,7 +617,7 @@ export const StudioCanvasEditor: React.FC = () => {
             <select
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className={`text-xs font-bold rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+              className={`text-xs font-bold rounded-xl px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                 isLight ? 'bg-indigo-50/70 text-indigo-700 border-indigo-200' : 'bg-slate-800 text-indigo-300 border-indigo-500/30'
               }`}
             >
@@ -605,7 +634,7 @@ export const StudioCanvasEditor: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSaveTemplateState}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
               isLight
                 ? 'text-slate-700 bg-slate-100 hover:bg-slate-200 border-slate-300'
                 : 'text-slate-200 bg-slate-800 hover:bg-slate-700 border-slate-700'
@@ -617,7 +646,7 @@ export const StudioCanvasEditor: React.FC = () => {
 
           <button
             onClick={handleStartBulkGeneration}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
             <Cpu className="w-4 h-4" />
             Générer ({studentsList.length || 1} PDF)
@@ -626,7 +655,7 @@ export const StudioCanvasEditor: React.FC = () => {
       </div>
 
       {/* Main Studio Editor Workspace (Library - Canvas - Inspector) */}
-      <div ref={studioContainerRef} className="flex gap-0 w-full min-h-0" style={{ height: 'calc(100vh - 260px)', minHeight: 560 }}>
+      <div ref={studioContainerRef} className="flex gap-0 w-full flex-1 min-h-0">
         {/* Left Toolbar: Elements Library */}
         {!isExpandedWorkspace && (
           <div
@@ -715,10 +744,10 @@ export const StudioCanvasEditor: React.FC = () => {
         )}
 
         {/* Center: Canvas A4 Landscape Representation */}
-        <div className="flex-1 min-w-0 flex flex-col items-center justify-start space-y-3 overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-start space-y-2 overflow-hidden">
           
           {/* Zoom & Workspace Control Bar */}
-          <div className={`w-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl border text-xs shadow-md ${
+          <div className={`w-full flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl border text-xs shadow-md ${
             isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900/80 border-slate-800 text-slate-300'
           }`}>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -766,13 +795,11 @@ export const StudioCanvasEditor: React.FC = () => {
               </button>
 
               <button
-                onClick={() => applyZoom(0.65)}
+                onClick={fitToView}
                 className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] border transition-colors ${
-                  zoomScale === 0.65
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : isLight
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
                 }`}
               >
                 Ajuster
@@ -858,12 +885,12 @@ export const StudioCanvasEditor: React.FC = () => {
             onMouseMove={handleViewportMouseMove}
             onMouseUp={handleViewportMouseUp}
             onMouseLeave={handleViewportMouseUp}
-            className={`studio-scroll-viewport relative w-full h-[560px] max-h-[68vh] border rounded-3xl shadow-2xl overflow-auto select-none transition-colors ${
+            className={`studio-scroll-viewport relative w-full flex-1 min-h-0 border rounded-3xl shadow-2xl overflow-auto select-none transition-colors ${
               isPanMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
             } ${isLight ? 'bg-slate-200/90 border-slate-300' : 'bg-slate-900 border-slate-800'}`}
           >
             {/* Inner Centered Container */}
-            <div className="min-w-fit min-h-fit p-8 sm:p-14 flex items-center justify-center m-auto">
+            <div className="min-w-fit min-h-fit p-6 sm:p-10 flex items-center justify-center m-auto">
               <div
                 className="border border-slate-300/40 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-200"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
