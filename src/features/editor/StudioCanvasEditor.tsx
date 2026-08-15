@@ -16,6 +16,7 @@ import {
   downloadZip 
 } from '../../lib/pdfGenerator';
 import { StepIndicator } from '../../components/common/StepIndicator';
+import { useTheme } from '../../lib/useTheme';
 import { 
   Type, 
   Variable, 
@@ -51,6 +52,7 @@ export const StudioCanvasEditor: React.FC = () => {
   const { activeProject } = useProjectStore();
   const { establishment } = useEstablishmentStore();
   const { setActiveTab } = useUIStore();
+  const { isLight, t } = useTheme();
 
   const studentsList = activeProject?.students && activeProject.students.length > 0
     ? activeProject.students
@@ -423,15 +425,19 @@ export const StudioCanvasEditor: React.FC = () => {
       <StepIndicator currentStep={4} />
 
       {/* Top Action & Preview Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+      <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border backdrop-blur-md shadow-md ${
+        isLight ? 'bg-white border-slate-200 shadow-slate-200' : 'bg-slate-900/60 border-slate-800'
+      }`}>
         {/* Template Selector & Live Preview Student Dropdown */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400">Modèle actif :</span>
+            <span className={`text-xs font-semibold ${t.textSecondary}`}>Modèle actif :</span>
             <select
               value={activeTemplate?.id || ''}
               onChange={(e) => setActiveTemplateId(e.target.value)}
-              className="bg-slate-800 text-slate-100 text-xs font-bold rounded-xl px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`text-xs font-bold rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                isLight ? 'bg-slate-100 border-slate-300 text-slate-900' : 'bg-slate-800 text-slate-100 border-slate-700'
+              }`}
             >
               {templates.map((tmpl) => (
                 <option key={tmpl.id} value={tmpl.id}>
@@ -441,13 +447,15 @@ export const StudioCanvasEditor: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 border-l border-slate-800 pl-4">
-            <User className="w-4 h-4 text-indigo-400" />
-            <span className="text-xs font-semibold text-slate-400">Aperçu avec :</span>
+          <div className={`flex items-center gap-2 border-l pl-4 ${t.border}`}>
+            <User className="w-4 h-4 text-indigo-500" />
+            <span className={`text-xs font-semibold ${t.textSecondary}`}>Aperçu avec :</span>
             <select
               value={selectedStudentId}
               onChange={(e) => setSelectedStudentId(e.target.value)}
-              className="bg-slate-800 text-indigo-300 text-xs font-bold rounded-xl px-3 py-2 border border-indigo-500/30 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`text-xs font-bold rounded-xl px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                isLight ? 'bg-indigo-50/70 text-indigo-700 border-indigo-200' : 'bg-slate-800 text-indigo-300 border-indigo-500/30'
+              }`}
             >
               {studentsList.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -462,9 +470,13 @@ export const StudioCanvasEditor: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSaveTemplateState}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
+              isLight
+                ? 'text-slate-700 bg-slate-100 hover:bg-slate-200 border-slate-300'
+                : 'text-slate-200 bg-slate-800 hover:bg-slate-700 border-slate-700'
+            }`}
           >
-            <Save className="w-4 h-4 text-emerald-400" />
+            <Save className="w-4 h-4 text-emerald-500" />
             Enregistrer Modèle
           </button>
 
@@ -483,33 +495,43 @@ export const StudioCanvasEditor: React.FC = () => {
         {/* Left Toolbar: Elements Library (3 Cols, Hidden if expanded) */}
         {!isExpandedWorkspace && (
           <div className="lg:col-span-3 space-y-4">
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-              <h3 className="font-bold text-slate-100 text-xs uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-indigo-400" />
+            <div className={`p-4 rounded-2xl border space-y-4 shadow-md ${
+              isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'
+            }`}>
+              <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${t.textPrimary}`}>
+                <Sparkles className="w-4 h-4 text-indigo-500" />
                 Bibliothèque d'Éléments
               </h3>
 
               <div className="space-y-2">
                 <button
                   onClick={handleAddText}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-700/80 transition-colors"
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-semibold border transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80'
+                  }`}
                 >
-                  <Type className="w-4 h-4 text-indigo-400" />
+                  <Type className="w-4 h-4 text-indigo-500" />
                   Ajouter un Bloc Texte
                 </button>
 
                 <button
                   onClick={handleAddBorderFrame}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-700/80 transition-colors"
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-semibold border transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80'
+                  }`}
                 >
-                  <Square className="w-4 h-4 text-amber-400" />
+                  <Square className="w-4 h-4 text-amber-500" />
                   Ajouter Cadre / Bordure
                 </button>
               </div>
 
               {/* Dynamic Variables Quick Inserter */}
-              <div className="pt-3 border-t border-slate-800 space-y-2">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+              <div className={`pt-3 border-t space-y-2 ${t.border}`}>
+                <span className={`text-[11px] font-bold uppercase tracking-wider block ${t.textSecondary}`}>
                   Insérer une Variable
                 </span>
 
@@ -518,10 +540,14 @@ export const StudioCanvasEditor: React.FC = () => {
                     <button
                       key={v.key}
                       onClick={() => handleAddVariable(v.key)}
-                      className="w-full flex items-center justify-between p-2 rounded-lg bg-slate-950/60 hover:bg-indigo-950/40 text-slate-300 text-xs border border-slate-800 hover:border-indigo-500/30 transition-colors text-left"
+                      className={`w-full flex items-center justify-between p-2 rounded-lg text-xs border transition-colors text-left ${
+                        isLight
+                          ? 'bg-slate-50 hover:bg-indigo-50 text-slate-700 border-slate-200 hover:border-indigo-300'
+                          : 'bg-slate-950/60 hover:bg-indigo-950/40 text-slate-300 border-slate-800 hover:border-indigo-500/30'
+                      }`}
                     >
-                      <span className="font-bold text-indigo-300">{v.key}</span>
-                      <span className="text-[10px] text-slate-500">{v.label}</span>
+                      <span className="font-bold text-indigo-500">{v.key}</span>
+                      <span className={`text-[10px] ${t.textMuted}`}>{v.label}</span>
                     </button>
                   ))}
                 </div>
@@ -534,12 +560,18 @@ export const StudioCanvasEditor: React.FC = () => {
         <div className={`${isExpandedWorkspace ? 'lg:col-span-9' : 'lg:col-span-6'} flex flex-col items-center justify-center space-y-3 transition-all duration-300`}>
           
           {/* Zoom & Workspace Control Bar */}
-          <div className="w-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs shadow-md">
+          <div className={`w-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl border text-xs shadow-md ${
+            isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900/80 border-slate-800 text-slate-300'
+          }`}>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-semibold px-2">Zoom :</span>
+              <span className={`font-semibold px-2 ${t.textSecondary}`}>Zoom :</span>
               <button
                 onClick={() => applyZoom(zoomScale - 0.05)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                }`}
                 title="Dézoomer (-5%)"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
@@ -548,7 +580,11 @@ export const StudioCanvasEditor: React.FC = () => {
               <select
                 value={zoomScale}
                 onChange={(e) => applyZoom(parseFloat(e.target.value))}
-                className="bg-slate-950 text-indigo-300 font-bold rounded-lg px-2.5 py-1 border border-slate-700 text-xs focus:outline-none"
+                className={`font-bold rounded-lg px-2.5 py-1 border text-xs focus:outline-none ${
+                  isLight
+                    ? 'bg-slate-100 text-indigo-700 border-slate-300'
+                    : 'bg-slate-950 text-indigo-300 border-slate-700'
+                }`}
               >
                 <option value={0.35}>35% (Très petit)</option>
                 <option value={0.45}>45% (Aperçu global)</option>
@@ -561,7 +597,11 @@ export const StudioCanvasEditor: React.FC = () => {
 
               <button
                 onClick={() => applyZoom(zoomScale + 0.05)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                className={`p-1.5 rounded-lg border transition-colors ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                }`}
                 title="Zoomer (+5%)"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -569,7 +609,7 @@ export const StudioCanvasEditor: React.FC = () => {
 
               <button
                 onClick={() => applyZoom(0.55)}
-                className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 font-semibold border border-indigo-500/20 hover:bg-indigo-500/20 text-[11px] transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-semibold border border-indigo-500/20 hover:bg-indigo-500/20 text-[11px] transition-colors"
               >
                 Ajuster (100% visible)
               </button>
@@ -578,17 +618,21 @@ export const StudioCanvasEditor: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsExpandedWorkspace(!isExpandedWorkspace)}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors text-[11px] font-semibold"
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border transition-colors text-[11px] font-semibold ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                }`}
                 title="Agrandir la zone d'édition"
               >
                 {isExpandedWorkspace ? (
                   <>
-                    <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+                    <Minimize2 className="w-3.5 h-3.5 text-amber-500" />
                     Réduire Studio
                   </>
                 ) : (
                   <>
-                    <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                    <Maximize2 className="w-3.5 h-3.5 text-amber-500" />
                     Agrandir Studio
                   </>
                 )}
@@ -597,29 +641,35 @@ export const StudioCanvasEditor: React.FC = () => {
           </div>
 
           {/* Canvas Wrapper Box */}
-          <div className="relative p-3 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-auto max-w-full flex justify-center">
-            <div className="border border-slate-300/20 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-300">
+          <div className={`relative p-4 border rounded-3xl shadow-2xl overflow-auto max-w-full flex justify-center ${
+            isLight ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900 border-slate-800'
+          }`}>
+            <div className="border border-slate-300 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-300">
               <canvas ref={canvasRef} className="block" />
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-400 text-center font-medium">
-            Format A4 Paysage (297 x 210 mm) • Zoom actuel : <strong className="text-indigo-300">{Math.round(zoomScale * 100)}%</strong> • Double-cliquez pour éditer.
+          <p className={`text-[11px] text-center font-medium ${t.textSecondary}`}>
+            Format A4 Paysage (297 x 210 mm) • Zoom actuel : <strong className="text-indigo-500">{Math.round(zoomScale * 100)}%</strong> • Double-cliquez pour éditer.
           </p>
         </div>
 
         {/* Right Inspector: Properties Panel (3 Cols) */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+          <div className={`p-4 rounded-2xl border space-y-4 shadow-md ${
+            isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'
+          }`}>
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-100 text-xs uppercase tracking-wider flex items-center gap-2">
-                <Palette className="w-4 h-4 text-emerald-400" />
+              <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${t.textPrimary}`}>
+                <Palette className="w-4 h-4 text-emerald-500" />
                 Propriétés de l'Élément
               </h3>
               {selectedObject && (
                 <button
                   onClick={handleDeleteSelected}
-                  className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors"
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    isLight ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-rose-400 hover:bg-rose-500/10'
+                  }`}
                   title="Supprimer"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -631,7 +681,7 @@ export const StudioCanvasEditor: React.FC = () => {
               <div className="space-y-4">
                 {/* Text Content */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                  <label className={`block text-[11px] font-semibold mb-1 ${t.textSecondary}`}>
                     Texte ou Variable
                   </label>
                   <textarea
@@ -641,13 +691,17 @@ export const StudioCanvasEditor: React.FC = () => {
                       setPropText(e.target.value);
                       updateSelectedProperty('text', e.target.value);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                    className={`w-full text-xs rounded-xl p-2.5 border focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono ${
+                      isLight
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-950 border-slate-800 text-slate-100'
+                    }`}
                   />
                 </div>
 
                 {/* Font Family */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                  <label className={`block text-[11px] font-semibold mb-1 ${t.textSecondary}`}>
                     Police typographique
                   </label>
                   <select
@@ -656,7 +710,11 @@ export const StudioCanvasEditor: React.FC = () => {
                       setPropFontFamily(e.target.value);
                       updateSelectedProperty('fontFamily', e.target.value);
                     }}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-xs rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className={`w-full text-xs rounded-xl p-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      isLight
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-slate-950 border-slate-800 text-slate-100'
+                    }`}
                   >
                     <option value="Inter">Inter (Standard Modern)</option>
                     <option value="Outfit">Outfit (Moderne H1)</option>
@@ -669,7 +727,7 @@ export const StudioCanvasEditor: React.FC = () => {
                 {/* Font Size & Color */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className={`block text-[11px] font-semibold mb-1 ${t.textSecondary}`}>
                       Taille (pt)
                     </label>
                     <input
@@ -680,12 +738,16 @@ export const StudioCanvasEditor: React.FC = () => {
                         setPropFontSize(val);
                         updateSelectedProperty('fontSize', val);
                       }}
-                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 text-xs rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className={`w-full text-xs rounded-xl p-2 border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                        isLight
+                          ? 'bg-slate-50 border-slate-300 text-slate-900'
+                          : 'bg-slate-950 border-slate-800 text-slate-100'
+                      }`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className={`block text-[11px] font-semibold mb-1 ${t.textSecondary}`}>
                       Couleur
                     </label>
                     <input
@@ -695,7 +757,9 @@ export const StudioCanvasEditor: React.FC = () => {
                         setPropColor(e.target.value);
                         updateSelectedProperty('color', e.target.value);
                       }}
-                      className="w-full h-9 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer"
+                      className={`w-full h-9 rounded-xl border cursor-pointer ${
+                        isLight ? 'bg-slate-50 border-slate-300' : 'bg-slate-950 border-slate-800'
+                      }`}
                     />
                   </div>
                 </div>
@@ -709,7 +773,11 @@ export const StudioCanvasEditor: React.FC = () => {
                       updateSelectedProperty('fontWeight', next ? 'bold' : 'normal');
                     }}
                     className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                      propBold ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-slate-400 border-slate-800'
+                      propBold
+                        ? 'bg-indigo-600 text-white border-indigo-500'
+                        : isLight
+                          ? 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+                          : 'bg-slate-950 text-slate-400 border-slate-800'
                     }`}
                   >
                     B (Gras)
@@ -722,7 +790,11 @@ export const StudioCanvasEditor: React.FC = () => {
                       updateSelectedProperty('fontStyle', next ? 'italic' : 'normal');
                     }}
                     className={`flex-1 py-1.5 rounded-lg text-xs italic border transition-colors ${
-                      propItalic ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-950 text-slate-400 border-slate-800'
+                      propItalic
+                        ? 'bg-indigo-600 text-white border-indigo-500'
+                        : isLight
+                          ? 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+                          : 'bg-slate-950 text-slate-400 border-slate-800'
                     }`}
                   >
                     I (Italique)
@@ -730,8 +802,8 @@ export const StudioCanvasEditor: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-slate-400 text-center py-6">
-                Cliquez sur n'importe quel element de l'attestation pour le personnaliser.
+              <p className={`text-xs text-center py-6 ${t.textMuted}`}>
+                Cliquez sur n'importe quel élément de l'attestation pour le personnaliser.
               </p>
             )}
           </div>
@@ -740,30 +812,34 @@ export const StudioCanvasEditor: React.FC = () => {
 
       {/* Generation Progress & ZIP Download Modal */}
       {isGenerating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center"
+            className={`w-full max-w-lg border rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center ${
+              isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-900 border-slate-800 text-white'
+            }`}
           >
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 mx-auto shadow-inner">
               <Cpu className="w-8 h-8 animate-spin" />
             </div>
 
             <div>
-              <h3 className="text-xl font-bold font-outfit text-white">
+              <h3 className={`text-xl font-bold font-outfit ${t.textPrimary}`}>
                 {generationProgress < 100
                   ? 'Génération des Attestations en cours...'
                   : 'Génération Terminée avec Succès ! 🎉'}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className={`text-xs mt-1 ${t.textSecondary}`}>
                 {generatedCount} / {studentsList.length || 1} attestations créées
               </p>
             </div>
 
             {/* Progress Bar */}
             <div className="space-y-2">
-              <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+              <div className={`w-full h-3 rounded-full overflow-hidden p-0.5 border ${
+                isLight ? 'bg-slate-200 border-slate-300' : 'bg-slate-800 border-slate-700'
+              }`}>
                 <motion.div
                   className="bg-gradient-to-r from-indigo-500 to-emerald-400 h-full rounded-full"
                   initial={{ width: 0 }}
@@ -771,7 +847,7 @@ export const StudioCanvasEditor: React.FC = () => {
                   transition={{ duration: 0.3 }}
                 />
               </div>
-              <span className="text-xs font-bold text-indigo-300 font-mono">
+              <span className="text-xs font-bold text-indigo-500 font-mono">
                 {generationProgress}%
               </span>
             </div>
@@ -788,7 +864,11 @@ export const StudioCanvasEditor: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setIsGenerating(false)}
-                  className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700"
+                  className={`w-full sm:w-auto px-4 py-3 rounded-2xl font-semibold text-xs border transition-colors ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                  }`}
                 >
                   Fermer
                 </button>

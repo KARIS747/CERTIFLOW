@@ -2,49 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================
+   CERTIFLOW — Design System & Theme Variables
+   ============================================= */
+
 @layer base {
-  :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    --radius: 1rem;
+
+  /* ── DARK MODE (default) ── */
+  :root, .dark {
+    --bg-base:        220 26% 7%;       /* slate-950 */
+    --bg-surface:     222 25% 11%;      /* slate-900 */
+    --bg-elevated:    217 24% 15%;      /* slate-800 */
+    --bg-hover:       217 24% 18%;
+
+    --text-primary:   210 40% 98%;      /* white */
+    --text-secondary: 215 20% 65%;      /* slate-400 */
+    --text-muted:     215 16% 47%;      /* slate-500 */
+
+    --border:         217 24% 20%;      /* slate-800 */
+    --border-light:   217 24% 24%;
+
+    --accent:         239 84% 67%;      /* indigo-500 */
+    --accent-hover:   239 84% 60%;
+    --accent-glow:    239 84% 67%;
+
+    --gold:           43 96% 56%;       /* amber-400 */
+
+    --scrollbar-track:  220 26% 7%;
+    --scrollbar-thumb:  217 24% 20%;
+    --scrollbar-hover:  239 84% 60%;
+
+    --shadow-color: 0 0% 0%;
+  }
+
+  /* ── LIGHT MODE ── */
+  .light {
+    --bg-base:        210 40% 96%;      /* slate-100 */
+    --bg-surface:     0 0% 100%;        /* white */
+    --bg-elevated:    210 40% 92%;      /* slate-200 */
+    --bg-hover:       210 40% 88%;
+
+    --text-primary:   222 47% 11%;      /* slate-900 */
+    --text-secondary: 215 25% 35%;      /* slate-600 */
+    --text-muted:     215 16% 55%;      /* slate-500 */
+
+    --border:         214 32% 82%;      /* slate-300 */
+    --border-light:   214 32% 88%;
+
+    --accent:         239 84% 57%;      /* indigo-600 */
+    --accent-hover:   239 84% 50%;
+    --accent-glow:    239 84% 67%;
+
+    --gold:           38 92% 45%;       /* amber-600 */
+
+    --scrollbar-track:  210 40% 92%;
+    --scrollbar-thumb:  214 32% 74%;
+    --scrollbar-hover:  239 84% 57%;
+
+    --shadow-color: 222 47% 30%;
+  }
+
+  /* ── BASE ELEMENT DEFAULTS ── */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--bg-base));
+    color: hsl(var(--text-primary));
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
-/* Custom Scrollbars */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+/* =============================================
+   THEME-AWARE UTILITY CLASSES
+   ============================================= */
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+.cf-bg-base       { background-color: hsl(var(--bg-base)); }
+.cf-bg-surface    { background-color: hsl(var(--bg-surface)); }
+.cf-bg-elevated   { background-color: hsl(var(--bg-elevated)); }
+.cf-text-primary  { color: hsl(var(--text-primary)); }
+.cf-text-secondary{ color: hsl(var(--text-secondary)); }
+.cf-text-muted    { color: hsl(var(--text-muted)); }
+.cf-border        { border-color: hsl(var(--border)); }
+
+/* =============================================
+   SCROLLBARS
+   ============================================= */
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: hsl(var(--scrollbar-track));
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.8);
+  background: hsl(var(--scrollbar-thumb));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.8);
+  background: hsl(var(--scrollbar-hover));
+}
+
+/* =============================================
+   ANIMATIONS
+   ============================================= */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in      { animation: fadeIn 0.3s ease both; }
+.animate-slide-in-right { animation: slideInRight 0.3s ease both; }
+.animate-scale-in     { animation: scaleIn 0.2s ease both; }
+
+/* =============================================
+   TRANSITION HELPER — smooth theme switching
+   ============================================= */
+
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Disable transition on elements that shouldn't animate */
+canvas, img, svg, video {
+  transition: none !important;
 }

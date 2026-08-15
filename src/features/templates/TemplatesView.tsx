@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTemplateStore } from '../../store/useTemplateStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTheme } from '../../lib/useTheme';
 import { Template } from '../../types/template';
 import { 
   Layout, 
@@ -18,6 +19,7 @@ import { toast } from 'sonner';
 export const TemplatesView: React.FC = () => {
   const { templates, activeTemplateId, setActiveTemplateId, duplicateTemplate, deleteTemplate, addTemplate, resetTemplates } = useTemplateStore();
   const { setActiveTab } = useUIStore();
+  const { isLight, t } = useTheme();
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   const filteredTemplates = templates.filter((t) =>
@@ -97,11 +99,11 @@ export const TemplatesView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-outfit text-white tracking-tight flex items-center gap-2">
-            <Layout className="w-6 h-6 text-amber-400" />
+          <h1 className={`text-2xl font-bold font-outfit tracking-tight flex items-center gap-2 ${t.textPrimary}`}>
+            <Layout className="w-6 h-6 text-amber-500" />
             Galerie de Modèles d'Attestation
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className={`text-xs ${t.textSecondary}`}>
             Sélectionnez, personnalisez ou dupliquez un modèle A4 Paysage
           </p>
         </div>
@@ -109,10 +111,14 @@ export const TemplatesView: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handleResetDefaults}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+            className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-all ${
+              isLight
+                ? 'text-amber-700 bg-amber-50 border-amber-300 hover:bg-amber-100'
+                : 'text-amber-300 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20'
+            }`}
             title="Recharger les modèles de démonstration royaux parfaitement centrés"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             Recharger Modèles Prestige
           </button>
 
@@ -127,15 +133,19 @@ export const TemplatesView: React.FC = () => {
       </div>
 
       {/* Category Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div className={`flex items-center gap-2 border-b pb-3 ${t.border}`}>
         {['all', 'attestation', 'certificat', 'diplome'].map((cat) => (
           <button
             key={cat}
             onClick={() => setFilterCategory(cat)}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
               filterCategory === cat
-                ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
-                : 'text-slate-400 hover:text-slate-200'
+                ? isLight
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                  : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                : isLight
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             {cat === 'all' ? 'Tous les modèles' : cat}
@@ -152,21 +162,27 @@ export const TemplatesView: React.FC = () => {
             <motion.div
               key={tmpl.id}
               whileHover={{ y: -4 }}
-              className={`p-6 rounded-3xl bg-slate-900/60 border transition-all duration-300 shadow-xl relative overflow-hidden flex flex-col justify-between ${
+              className={`p-6 rounded-3xl border transition-all duration-300 shadow-xl relative overflow-hidden flex flex-col justify-between ${
                 isActive
-                  ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-slate-900'
-                  : 'border-slate-800 hover:border-amber-500/30'
+                  ? isLight
+                    ? 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/40 shadow-indigo-100'
+                    : 'border-indigo-500 ring-2 ring-indigo-500/20 bg-slate-900'
+                  : isLight
+                    ? 'bg-white border-slate-200 hover:border-amber-400 hover:shadow-lg'
+                    : 'bg-slate-900/60 border-slate-800 hover:border-amber-500/30'
               }`}
             >
               <div>
                 {/* Badge top */}
                 <div className="flex items-center justify-between gap-2 mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 uppercase">
                       {tmpl.category || 'Attestation'}
                     </span>
                     {tmpl.isDefault && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                        isLight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                      }`}>
                         Officiel Pro
                       </span>
                     )}
@@ -175,7 +191,9 @@ export const TemplatesView: React.FC = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleDuplicate(tmpl.id, tmpl.name)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition-colors"
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isLight ? 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100' : 'text-slate-400 hover:text-indigo-300 hover:bg-slate-800'
+                      }`}
                       title="Dupliquer"
                     >
                       <Copy className="w-4 h-4" />
@@ -183,7 +201,9 @@ export const TemplatesView: React.FC = () => {
                     {!tmpl.isDefault && (
                       <button
                         onClick={() => handleDelete(tmpl.id, tmpl.name)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          isLight ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                        }`}
                         title="Supprimer"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -193,28 +213,30 @@ export const TemplatesView: React.FC = () => {
                 </div>
 
                 {/* Card Title & Desc */}
-                <h3 className="font-bold text-slate-100 text-base mb-1 line-clamp-1">
+                <h3 className={`font-bold text-base mb-1 line-clamp-1 ${t.textPrimary}`}>
                   {tmpl.name}
                 </h3>
-                <p className="text-xs text-slate-400 line-clamp-2 mb-4 h-8">
+                <p className={`text-xs line-clamp-2 mb-4 h-8 ${t.textSecondary}`}>
                   {tmpl.description || 'Design A4 Paysage pour attestations'}
                 </p>
 
                 {/* Element Count Specs */}
-                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs text-slate-300 space-y-1 mb-4">
+                <div className={`p-3 rounded-xl border text-xs space-y-1 mb-4 ${
+                  isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950/60 border-slate-800/80 text-slate-300'
+                }`}>
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-500">Format :</span>
-                    <span className="font-mono font-semibold text-slate-200">A4 Paysage (297×210 mm)</span>
+                    <span className={t.textMuted}>Format :</span>
+                    <span className={`font-mono font-semibold ${t.textPrimary}`}>A4 Paysage (297×210 mm)</span>
                   </div>
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-500">Éléments graphiques :</span>
-                    <span className="font-mono font-semibold text-indigo-400">{tmpl.elements.length} objets</span>
+                    <span className={t.textMuted}>Éléments graphiques :</span>
+                    <span className="font-mono font-semibold text-indigo-500">{tmpl.elements.length} objets</span>
                   </div>
                 </div>
               </div>
 
               {/* Select & Edit Actions */}
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+              <div className={`flex items-center gap-2 pt-2 border-t ${t.border}`}>
                 <button
                   onClick={() => {
                     setActiveTemplateId(tmpl.id);
@@ -224,7 +246,9 @@ export const TemplatesView: React.FC = () => {
                   className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                     isActive
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                      : isLight
+                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                   }`}
                 >
                   <Edit3 className="w-3.5 h-3.5" />

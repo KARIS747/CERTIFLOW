@@ -9,6 +9,7 @@ import {
   Download 
 } from 'lucide-react';
 import { useUIStore, MainTab } from '../../store/useUIStore';
+import { useTheme } from '../../lib/useTheme';
 
 interface Step {
   id: number;
@@ -34,6 +35,7 @@ interface StepIndicatorProps {
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSelectStep }) => {
   const { setActiveTab } = useUIStore();
+  const { isLight } = useTheme();
 
   const handleStepClick = (step: Step) => {
     setActiveTab(step.tab);
@@ -41,7 +43,9 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSel
   };
 
   return (
-    <div className="w-full bg-slate-900/40 border border-slate-800/80 rounded-2xl p-3 shadow-inner my-4">
+    <div className={`w-full rounded-2xl p-3 shadow-sm my-4 border ${
+      isLight ? 'bg-white border-slate-200' : 'bg-slate-900/40 border-slate-800/80'
+    }`}>
       <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
         {STEPS.map((step, idx) => {
           const isCompleted = step.id < currentStep;
@@ -55,8 +59,12 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSel
                   isActive
                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/30 scale-105'
                     : isCompleted
-                    ? 'bg-slate-800/80 text-emerald-400 border border-emerald-500/30 hover:bg-slate-800'
-                    : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? isLight
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
+                      : 'bg-slate-800/80 text-emerald-400 border border-emerald-500/30 hover:bg-slate-800'
+                    : isLight
+                      ? 'bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200'
+                      : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
                 <div
@@ -64,8 +72,8 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSel
                     isActive
                       ? 'bg-white text-indigo-600'
                       : isCompleted
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-slate-800 text-slate-400'
+                      ? isLight ? 'bg-emerald-200 text-emerald-800' : 'bg-emerald-500/20 text-emerald-400'
+                      : isLight ? 'bg-slate-200 text-slate-600' : 'bg-slate-800 text-slate-400'
                   }`}
                 >
                   {isCompleted ? '✓' : step.id}
@@ -76,7 +84,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, onSel
               {idx < STEPS.length - 1 && (
                 <div
                   className={`h-0.5 min-w-[12px] flex-1 rounded-full transition-colors ${
-                    isCompleted ? 'bg-emerald-500/40' : 'bg-slate-800'
+                    isCompleted ? 'bg-emerald-500/40' : isLight ? 'bg-slate-200' : 'bg-slate-800'
                   }`}
                 />
               )}
