@@ -97,8 +97,8 @@ export const StudioCanvasEditor: React.FC = () => {
   const [generatedCount, setGeneratedCount] = useState(0);
   const [zipBlob, setZipBlob] = useState<Blob | null>(null);
 
-  // Zoom & Workspace Expansion State (Default 55% scale fits A4 Landscape 1123x794 completely)
-  const [zoomScale, setZoomScale] = useState<number>(0.55);
+  // Zoom & Workspace Expansion State
+  const [zoomScale, setZoomScale] = useState<number>(0.65);
   const [isExpandedWorkspace, setIsExpandedWorkspace] = useState<boolean>(false);
 
   const applyZoom = (scale: number) => {
@@ -110,13 +110,16 @@ export const StudioCanvasEditor: React.FC = () => {
         width: Math.round(1123 * clamped),
         height: Math.round(794 * clamped),
       });
-      fabricCanvasRef.current.renderAll();
+      fabricCanvasRef.current.requestRenderAll();
     }
   };
 
-  // Canvas Initialization & Rendering
+  // Canvas Initialization & High-DPI Rendering
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    // Force high devicePixelRatio (Retina supersampling at 2x minimum for crystal-sharp text)
+    (fabric as any).devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
 
     // Safely dispose previous instance if re-rendering
     if (fabricCanvasRef.current) {
@@ -128,12 +131,14 @@ export const StudioCanvasEditor: React.FC = () => {
       fabricCanvasRef.current = null;
     }
 
-    // A4 Landscape Aspect Ratio: 1123 x 794 canvas size (scaled to zoomScale for perfect fit)
+    // A4 Landscape Aspect Ratio: 1123 x 794 canvas size
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: Math.round(1123 * zoomScale),
       height: Math.round(794 * zoomScale),
       backgroundColor: '#ffffff',
       selection: true,
+      enableRetinaScaling: true,
+      imageSmoothingEnabled: true,
     });
     canvas.setZoom(zoomScale);
 
@@ -141,6 +146,15 @@ export const StudioCanvasEditor: React.FC = () => {
 
     // Load initial elements from active template
     renderTemplateElements(canvas);
+
+    // When web fonts are fully loaded, trigger a re-render for pixel-perfect typography
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        if (fabricCanvasRef.current) {
+          fabricCanvasRef.current.requestRenderAll();
+        }
+      });
+    }
 
     // Event Listeners for Object Selection
     canvas.on('selection:created', (e) => handleObjectSelected(e.selected?.[0] || null));
@@ -374,20 +388,15 @@ export const StudioCanvasEditor: React.FC = () => {
 
     const generatedFiles: { fileName: string; pdfBytes: Uint8Array }[] = [];
 
-    // Fabric Canvas High DPI Render URL
-    const canvasDataUrl = fabricCanvasRef.current
-      ? fabricCanvasRef.current.toDataURL({ format: 'png', multiplier: (1 / zoomScale) * 2 })
-      : undefined;
-
     for (let i = 0; i < listToGenerate.length; i++) {
       const std = listToGenerate[i];
 
-      // Single PDF doc
+      // Generate pure vector PDF doc for each student
       const pdfDoc = generateSinglePDFBlob(
         activeTemplate,
         std,
         establishment,
-        canvasDataUrl
+        undefined
       );
 
       const pdfArrayBuffer = pdfDoc.output('arraybuffer');
@@ -402,7 +411,7 @@ export const StudioCanvasEditor: React.FC = () => {
       // Async step to prevent freezing UI
       setGeneratedCount(i + 1);
       setGenerationProgress(Math.round(((i + 1) / listToGenerate.length) * 100));
-      await new Promise((res) => setTimeout(res, 50));
+      await new Promise((res) => setTimeout(res, 30));
     }
 
     // Zip archive creation
@@ -416,7 +425,7 @@ export const StudioCanvasEditor: React.FC = () => {
       origin: { y: 0.6 },
     });
 
-    toast.success(`${generatedFiles.length} attestations PDF générées avec succès !`);
+    toast.success(`${generatedFiles.length} attestations PDF HD générées avec succès !`);
   };
 
   return (
@@ -563,7 +572,7 @@ export const StudioCanvasEditor: React.FC = () => {
           <div className={`w-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl border text-xs shadow-md ${
             isLight ? 'bg-white border-slate-200 text-slate-700' : 'bg-slate-900/80 border-slate-800 text-slate-300'
           }`}>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span className={`font-semibold px-2 ${t.textSecondary}`}>Zoom :</span>
               <button
                 onClick={() => applyZoom(zoomScale - 0.05)}
@@ -586,13 +595,13 @@ export const StudioCanvasEditor: React.FC = () => {
                     : 'bg-slate-950 text-indigo-300 border-slate-700'
                 }`}
               >
-                <option value={0.35}>35% (Très petit)</option>
                 <option value={0.45}>45% (Aperçu global)</option>
-                <option value={0.55}>55% (Ajusté Écran)</option>
-                <option value={0.65}>65% (Grand)</option>
-                <option value={0.75}>75% (Très Grand)</option>
-                <option value={1.0}>100% (Taille Réelle A4)</option>
-                <option value={1.25}>125% (Zoom +)</option>
+                <option value={0.55}>55% (Compact)</option>
+                <option value={0.65}>65% (Ajusté Écran)</option>
+                <option value={0.75}>75% (HD Net)</option>
+                <option value={0.85}>85% (Grand HD)</option>
+                <option value={1.0}>100% (Taille Réelle A4 1:1 HD)</option>
+                <option value={1.25}>125% (Zoom Précision)</option>
               </select>
 
               <button
@@ -608,22 +617,61 @@ export const StudioCanvasEditor: React.FC = () => {
               </button>
 
               <button
-                onClick={() => applyZoom(0.55)}
-                className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-semibold border border-indigo-500/20 hover:bg-indigo-500/20 text-[11px] transition-colors"
+                onClick={() => applyZoom(0.65)}
+                className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] border transition-colors ${
+                  zoomScale === 0.65
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
               >
-                Ajuster (100% visible)
+                Ajuster
+              </button>
+
+              <button
+                onClick={() => applyZoom(0.75)}
+                className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] border transition-colors ${
+                  zoomScale === 0.75
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
+              >
+                75% HD
+              </button>
+
+              <button
+                onClick={() => applyZoom(1.0)}
+                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border transition-colors ${
+                  zoomScale === 1.0
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : isLight
+                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
+                      : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}
+                title="Afficher en taille réelle 100% Pixel-Perfect Ultra-Net"
+              >
+                💎 100% Taille Réelle HD
               </button>
             </div>
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsExpandedWorkspace(!isExpandedWorkspace)}
+                onClick={() => {
+                  const next = !isExpandedWorkspace;
+                  setIsExpandedWorkspace(next);
+                  if (next && zoomScale < 0.85) {
+                    applyZoom(0.85);
+                  }
+                }}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border transition-colors text-[11px] font-semibold ${
                   isLight
                     ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
                     : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
                 }`}
-                title="Agrandir la zone d'édition"
+                title="Agrandir la zone d'édition pour une netteté maximale"
               >
                 {isExpandedWorkspace ? (
                   <>
@@ -633,7 +681,7 @@ export const StudioCanvasEditor: React.FC = () => {
                 ) : (
                   <>
                     <Maximize2 className="w-3.5 h-3.5 text-amber-500" />
-                    Agrandir Studio
+                    Agrandir Studio (Plein Écran)
                   </>
                 )}
               </button>
@@ -641,10 +689,10 @@ export const StudioCanvasEditor: React.FC = () => {
           </div>
 
           {/* Canvas Wrapper Box */}
-          <div className={`relative p-4 border rounded-3xl shadow-2xl overflow-auto max-w-full flex justify-center ${
+          <div className={`relative p-4 sm:p-6 border rounded-3xl shadow-2xl overflow-auto max-w-full flex justify-center ${
             isLight ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900 border-slate-800'
           }`}>
-            <div className="border border-slate-300 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-300">
+            <div className="border border-slate-300/40 shadow-2xl rounded-sm overflow-hidden bg-white transition-all duration-300" style={{ imageRendering: '-webkit-optimize-contrast' }}>
               <canvas ref={canvasRef} className="block" />
             </div>
           </div>
