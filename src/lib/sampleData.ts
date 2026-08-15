@@ -206,7 +206,7 @@ export const SAMPLE_STUDENTS: Student[] = [
 ];
 
 export const DEFAULT_ESTABLISHMENT: Establishment = {
-  name: 'Institut Supérieur des Hautes Études & Technologies',
+  name: 'INSTITUT SUPÉRIEUR DES HAUTES ÉTUDES & TECHNOLOGIES',
   address: '145 Avenue de la République, 75011 Paris',
   phone: '+33 (0)1 48 00 22 44',
   email: 'contact@ishet-formation.fr',
@@ -230,8 +230,8 @@ export const DEFAULT_ESTABLISHMENT: Establishment = {
 export const DEFAULT_TEMPLATES: Template[] = [
   {
     id: 'tmpl-excellence-gold',
-    name: 'Attestation Classique Or & Marine',
-    description: 'Design académique prestigieux avec filigrane doré et typographie élégante',
+    name: 'Attestation Prestige Or & Marine',
+    description: 'Design académique royal parfaitement centré avec triple cadre or/marine et ornements luxueux',
     category: 'attestation',
     pageSize: 'A4',
     orientation: 'landscape',
@@ -241,38 +241,69 @@ export const DEFAULT_TEMPLATES: Template[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     elements: [
-      // Border frame
+      // Outer Thick Gold Border
       {
-        id: 'el-border',
+        id: 'el-border-outer',
         type: 'rectangle',
-        x: 30,
-        y: 30,
-        width: 1063,
-        height: 734,
+        x: 25,
+        y: 25,
+        width: 1073,
+        height: 744,
         backgroundColor: 'transparent',
-        borderColor: '#4338ca',
+        borderColor: '#d97706',
         borderWidth: 4,
         isLocked: true
       },
+      // Middle Navy Border
       {
-        id: 'el-inner-border',
+        id: 'el-border-mid',
         type: 'rectangle',
-        x: 40,
-        y: 40,
-        width: 1043,
-        height: 714,
+        x: 35,
+        y: 35,
+        width: 1053,
+        height: 724,
         backgroundColor: 'transparent',
-        borderColor: '#d97706',
+        borderColor: '#1e1b4b',
+        borderWidth: 2,
+        isLocked: true
+      },
+      // Inner Fine Gold Border
+      {
+        id: 'el-border-inner',
+        type: 'rectangle',
+        x: 42,
+        y: 42,
+        width: 1039,
+        height: 710,
+        backgroundColor: 'transparent',
+        borderColor: '#f59e0b',
         borderWidth: 1,
         isLocked: true
       },
-      // Header Title
+
+      // Top Emblem Ornament
+      {
+        id: 'el-top-ornament',
+        type: 'text',
+        x: 561.5,
+        y: 65,
+        width: 800,
+        height: 30,
+        content: '✦  🎓  REPUBLIQUE FRANÇAISE  🎓  ✦',
+        fontFamily: 'Outfit',
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#d97706',
+        textAlign: 'center'
+      },
+
+      // Header Establishment Name (Centered at 561.5)
       {
         id: 'el-establishment-header',
         type: 'text',
-        x: 561,
-        y: 80,
-        width: 900,
+        x: 561.5,
+        y: 95,
+        width: 950,
         height: 40,
         content: 'INSTITUT SUPÉRIEUR DES HAUTES ÉTUDES & TECHNOLOGIES',
         fontFamily: 'Cinzel',
@@ -281,154 +312,170 @@ export const DEFAULT_TEMPLATES: Template[] = [
         color: '#1e1b4b',
         textAlign: 'center'
       },
+
+      // Subtitle
       {
         id: 'el-subtitle',
         type: 'text',
-        x: 561,
-        y: 115,
+        x: 561.5,
+        y: 135,
         width: 900,
-        height: 30,
-        content: 'ÉTABLISSEMENT D\'ENSEIGNEMENT SUPÉRIEUR DE RENOMMÉE',
+        height: 25,
+        content: 'ÉTABLISSEMENT D\'ENSEIGNEMENT SUPÉRIEUR DE RENOMMÉE ACADÉMIQUE',
         fontFamily: 'Inter',
-        fontSize: 11,
-        fontWeight: '500',
+        fontSize: 10,
+        fontWeight: '600',
         color: '#d97706',
         textAlign: 'center'
       },
+
       // Document Title
       {
         id: 'el-doc-title',
         type: 'text',
-        x: 561,
-        y: 180,
-        width: 800,
+        x: 561.5,
+        y: 190,
+        width: 850,
         height: 60,
         content: 'ATTESTATION DE RÉUSSITE',
         fontFamily: 'Outfit',
-        fontSize: 36,
+        fontSize: 38,
         fontWeight: 'bold',
         color: '#4338ca',
         textAlign: 'center'
       },
-      // Separator line
+
+      // Gold Separator Banner
       {
-        id: 'el-line-1',
-        type: 'line',
-        x: 361,
-        y: 245,
-        width: 400,
-        height: 2,
-        backgroundColor: '#d97706',
+        id: 'el-gold-banner',
+        type: 'text',
+        x: 561.5,
+        y: 240,
+        width: 500,
+        height: 25,
+        content: '✦   ───────   ⚜   ───────   ✦',
+        fontFamily: 'Inter',
+        fontSize: 14,
+        color: '#d97706',
+        textAlign: 'center'
       },
-      // Main Body Paragraph
+
+      // Body Intro Sentence
       {
         id: 'el-body-prefix',
         type: 'text',
-        x: 561,
+        x: 561.5,
         y: 280,
         width: 900,
         height: 30,
-        content: 'Le Conseil d\'Évaluation et le Directeur attestent que :',
+        content: 'Le Conseil d\'Évaluation et la Direction Académique attestent que :',
         fontFamily: 'Playfair Display',
         fontSize: 16,
         fontStyle: 'italic',
         color: '#475569',
         textAlign: 'center'
       },
-      // Student Name Variable
+
+      // Student Full Name (Centered & Highlighted in 36pt Bold)
       {
         id: 'el-student-name',
         type: 'variable',
         variableName: '{{nom_complet}}',
-        x: 561,
+        x: 561.5,
         y: 330,
-        width: 900,
+        width: 950,
         height: 55,
         content: '{{nom_complet}}',
         fontFamily: 'Outfit',
-        fontSize: 34,
+        fontSize: 36,
         fontWeight: 'bold',
         color: '#0f172a',
         textAlign: 'center'
       },
-      // Body Text
+
+      // Main Paragraph Text
       {
         id: 'el-body-text',
         type: 'text',
-        x: 561,
-        y: 400,
-        width: 880,
+        x: 561.5,
+        y: 405,
+        width: 900,
         height: 80,
-        content: 'a suivi avec succès la formation professionnelle certifiante en\n{{formation}}\net a satisfait à l\'ensemble des épreuves de contrôle des connaissances.',
+        content: 'a suivi avec succès la formation professionnelle certifiante en\n{{formation}}\net a satisfait avec distinction à l\'ensemble des épreuves de contrôle des connaissances.',
         fontFamily: 'Inter',
         fontSize: 16,
         color: '#334155',
         textAlign: 'center'
       },
-      // Details Grid (Mention & Note)
+
+      // Details Pill Bar (Mention & Moyenne)
       {
         id: 'el-mention-note',
         type: 'text',
-        x: 561,
+        x: 561.5,
         y: 495,
-        width: 800,
-        height: 40,
-        content: 'Mention : {{mention}}   |   Moyenne : {{moyenne}}   |   Rang : {{rang}}',
+        width: 850,
+        height: 35,
+        content: 'Mention : {{mention}}    •    Moyenne : {{moyenne}}    •    Rang : {{rang}}',
         fontFamily: 'Inter',
         fontSize: 15,
-        fontWeight: '600',
+        fontWeight: 'bold',
         color: '#1e1b4b',
         textAlign: 'center'
       },
+
       // Date and Place
       {
         id: 'el-date-place',
         type: 'text',
-        x: 561,
-        y: 560,
-        width: 700,
+        x: 561.5,
+        y: 555,
+        width: 800,
         height: 30,
-        content: 'Délivré à Paris, le {{date_obtention}}',
+        content: 'Fait sous le Sceau de l\'Établissement à Paris, le {{date_obtention}}',
         fontFamily: 'Playfair Display',
         fontSize: 14,
         fontStyle: 'italic',
         color: '#64748b',
         textAlign: 'center'
       },
-      // Numbering Footer
+
+      // Center Official Stamp Ornament
       {
-        id: 'el-numbering',
+        id: 'el-center-seal',
         type: 'text',
-        x: 100,
-        y: 715,
+        x: 561.5,
+        y: 630,
         width: 300,
-        height: 25,
-        content: 'N° d\'enregistrement : {{numero}}',
-        fontFamily: 'Inter',
-        fontSize: 10,
-        color: '#94a3b8',
-        textAlign: 'left'
+        height: 35,
+        content: '★ SCEAU OFFICIEL D\'EXCELLENCE ★',
+        fontFamily: 'Outfit',
+        fontSize: 11,
+        fontWeight: 'bold',
+        color: '#d97706',
+        textAlign: 'center'
       },
-      // Signatures Labels
+
+      // Signatures Left Column
       {
         id: 'el-sig-left-title',
         type: 'text',
-        x: 230,
+        x: 240,
         y: 620,
         width: 300,
         height: 25,
         content: 'La Responsable Pédagogique',
         fontFamily: 'Inter',
         fontSize: 12,
-        fontWeight: '600',
-        color: '#334155',
+        fontWeight: 'bold',
+        color: '#1e1b4b',
         textAlign: 'center'
       },
       {
         id: 'el-sig-left-name',
         type: 'text',
-        x: 230,
-        y: 690,
+        x: 240,
+        y: 685,
         width: 300,
         height: 25,
         content: 'Dr. Hélène ROUSSEAU',
@@ -437,25 +484,27 @@ export const DEFAULT_TEMPLATES: Template[] = [
         color: '#475569',
         textAlign: 'center'
       },
+
+      // Signatures Right Column
       {
         id: 'el-sig-right-title',
         type: 'text',
-        x: 890,
+        x: 880,
         y: 620,
         width: 300,
         height: 25,
         content: 'Le Directeur de l\'Établissement',
         fontFamily: 'Inter',
         fontSize: 12,
-        fontWeight: '600',
-        color: '#334155',
+        fontWeight: 'bold',
+        color: '#1e1b4b',
         textAlign: 'center'
       },
       {
         id: 'el-sig-right-name',
         type: 'text',
-        x: 890,
-        y: 690,
+        x: 880,
+        y: 685,
         width: 300,
         height: 25,
         content: 'Prof. Alexandre DE VANCE',
@@ -463,13 +512,28 @@ export const DEFAULT_TEMPLATES: Template[] = [
         fontSize: 13,
         color: '#475569',
         textAlign: 'center'
+      },
+
+      // Numbering Footer
+      {
+        id: 'el-numbering',
+        type: 'text',
+        x: 70,
+        y: 720,
+        width: 350,
+        height: 25,
+        content: 'N° d\'enregistrement : {{numero}}',
+        fontFamily: 'Inter',
+        fontSize: 10,
+        color: '#94a3b8',
+        textAlign: 'left'
       }
     ]
   },
   {
     id: 'tmpl-modern-tech',
-    name: 'Certificat Moderne Épuré',
-    description: 'Style contemporain minimaliste avec des aplats de couleur cyan/indigo et design épuré',
+    name: 'Certificat Moderne Épuré Cyan',
+    description: 'Style contemporain minimaliste avec des aplats cyan/indigo et typographie épurée centrée',
     category: 'certificat',
     pageSize: 'A4',
     orientation: 'landscape',
@@ -483,7 +547,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
         type: 'rectangle',
         x: 0,
         y: 0,
-        width: 25,
+        width: 30,
         height: 794,
         backgroundColor: '#0284c7',
         isLocked: true
@@ -497,7 +561,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
         height: 50,
         content: 'CERTIFICAT ACADÉMIQUE',
         fontFamily: 'Outfit',
-        fontSize: 38,
+        fontSize: 40,
         fontWeight: 'bold',
         color: '#0f172a',
         textAlign: 'center'
@@ -523,7 +587,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
         y: 250,
         width: 800,
         height: 30,
-        content: 'Ce certificat valide que',
+        content: 'Ce certificat valide officiel que',
         fontFamily: 'Inter',
         fontSize: 16,
         color: '#64748b',
@@ -539,7 +603,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
         height: 50,
         content: '{{nom_complet}}',
         fontFamily: 'Outfit',
-        fontSize: 32,
+        fontSize: 34,
         fontWeight: 'bold',
         color: '#0369a1',
         textAlign: 'center'

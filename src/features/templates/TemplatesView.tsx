@@ -16,13 +16,20 @@ import {
 import { toast } from 'sonner';
 
 export const TemplatesView: React.FC = () => {
-  const { templates, activeTemplateId, setActiveTemplateId, duplicateTemplate, deleteTemplate, addTemplate } = useTemplateStore();
+  const { templates, activeTemplateId, setActiveTemplateId, duplicateTemplate, deleteTemplate, addTemplate, resetTemplates } = useTemplateStore();
   const { setActiveTab } = useUIStore();
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
   const filteredTemplates = templates.filter((t) =>
     filterCategory === 'all' ? true : t.category === filterCategory
   );
+
+  const handleResetDefaults = () => {
+    if (confirm('Voulez-vous recharger les modèles officiels Prestige Or & Marine ?')) {
+      resetTemplates();
+      toast.success('Modèles officiels Prestige rechargés avec succès !');
+    }
+  };
 
   const handleDuplicate = (id: string, name: string) => {
     duplicateTemplate(id);
@@ -99,13 +106,24 @@ export const TemplatesView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleCreateNewTemplate}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-600/30 transition-all"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Créer un Nouveau Modèle
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleResetDefaults}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all"
+            title="Recharger les modèles de démonstration royaux parfaitement centrés"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            Recharger Modèles Prestige
+          </button>
+
+          <button
+            onClick={handleCreateNewTemplate}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 shadow-lg shadow-indigo-600/30 transition-all"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Créer un Nouveau Modèle
+          </button>
+        </div>
       </div>
 
       {/* Category Tabs */}

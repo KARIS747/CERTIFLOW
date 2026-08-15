@@ -24,8 +24,8 @@ export const useTemplateStore = create<TemplateState>()(
       activeTemplate: DEFAULT_TEMPLATES[0],
 
       setActiveTemplateId: (id) => {
-        const found = get().templates.find((t) => t.id === id) || null;
-        set({ activeTemplateId: id, activeTemplate: found });
+        const found = get().templates.find((t) => t.id === id) || DEFAULT_TEMPLATES[0];
+        set({ activeTemplateId: found.id, activeTemplate: found });
       },
 
       addTemplate: (newTmpl) => {
@@ -91,6 +91,12 @@ export const useTemplateStore = create<TemplateState>()(
     }),
     {
       name: 'certiflow-templates-storage',
+      version: 2,
+      migrate: () => ({
+        templates: DEFAULT_TEMPLATES,
+        activeTemplateId: DEFAULT_TEMPLATES[0].id,
+        activeTemplate: DEFAULT_TEMPLATES[0],
+      }),
     }
   )
 );

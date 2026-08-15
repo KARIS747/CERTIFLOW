@@ -168,12 +168,13 @@ export const StudioCanvasEditor: React.FC = () => {
           left: el.x,
           top: el.y,
           width: el.width,
+          originX: el.textAlign === 'center' ? 'center' : (el.textAlign === 'right' ? 'right' : 'left'),
           fontFamily: el.fontFamily || 'Inter',
           fontSize: el.fontSize || 18,
           fill: el.color || '#000000',
           fontWeight: el.fontWeight as any || 'normal',
           fontStyle: (el.fontStyle as any) || 'normal',
-          textAlign: el.textAlign || 'left',
+          textAlign: el.textAlign || 'center',
           lockScalingX: false,
           lockScalingY: false,
         });
@@ -241,8 +242,10 @@ export const StudioCanvasEditor: React.FC = () => {
   const handleAddText = () => {
     if (!fabricCanvasRef.current) return;
     const textObj = new fabric.IText('Nouveau texte d\'attestation', {
-      left: 300,
+      left: 561.5,
       top: 300,
+      originX: 'center',
+      textAlign: 'center',
       fontFamily: 'Inter',
       fontSize: 20,
       fill: '#1e293b',
@@ -252,15 +255,17 @@ export const StudioCanvasEditor: React.FC = () => {
     fabricCanvasRef.current.add(textObj);
     fabricCanvasRef.current.setActiveObject(textObj);
     fabricCanvasRef.current.renderAll();
-    toast.success('Bloc texte ajouté.');
+    toast.success('Bloc texte centré ajouté.');
   };
 
   const handleAddVariable = (variableKey: string) => {
     if (!fabricCanvasRef.current) return;
     const textContent = resolveVariableText(variableKey, currentStudent, establishment);
     const varObj = new fabric.IText(textContent, {
-      left: 350,
+      left: 561.5,
       top: 350,
+      originX: 'center',
+      textAlign: 'center',
       fontFamily: 'Outfit',
       fontSize: 24,
       fontWeight: 'bold',
@@ -271,7 +276,7 @@ export const StudioCanvasEditor: React.FC = () => {
     fabricCanvasRef.current.add(varObj);
     fabricCanvasRef.current.setActiveObject(varObj);
     fabricCanvasRef.current.renderAll();
-    toast.success(`Variable ${variableKey} insérée !`);
+    toast.success(`Variable ${variableKey} insérée et centrée !`);
   };
 
   const handleAddBorderFrame = () => {
