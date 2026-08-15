@@ -28,7 +28,7 @@ export interface Template {
   id: string;
   name: string;
   description?: string;
-  category?: 'attestation' | 'certificat' | 'diplome' | 'sur_mesure';
+  category?: 'attestation' | 'certificat' | 'diplome' | 'stage' | 'participation' | 'sur_mesure';
   pageSize: 'A4';
   orientation: 'landscape' | 'portrait';
   dimensions: {

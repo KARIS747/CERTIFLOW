@@ -133,13 +133,20 @@ export const TemplatesView: React.FC = () => {
       </div>
 
       {/* Category Tabs */}
-      <div className={`flex items-center gap-2 border-b pb-3 ${t.border}`}>
-        {['all', 'attestation', 'certificat', 'diplome'].map((cat) => (
+      <div className={`flex flex-wrap items-center gap-2 border-b pb-3 ${t.border}`}>
+        {[
+          { key: 'all', label: 'Tous les modèles' },
+          { key: 'attestation', label: '📜 Attestation' },
+          { key: 'certificat', label: '🏅 Certificat' },
+          { key: 'diplome', label: '🎓 Diplôme' },
+          { key: 'stage', label: '🏢 Stage' },
+          { key: 'participation', label: '🏆 Prix & Participation' },
+        ].map(({ key, label }) => (
           <button
-            key={cat}
-            onClick={() => setFilterCategory(cat)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
-              filterCategory === cat
+            key={key}
+            onClick={() => setFilterCategory(key)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+              filterCategory === key
                 ? isLight
                   ? 'bg-amber-100 text-amber-800 border border-amber-300'
                   : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
@@ -148,7 +155,7 @@ export const TemplatesView: React.FC = () => {
                   : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            {cat === 'all' ? 'Tous les modèles' : cat}
+            {label}
           </button>
         ))}
       </div>
