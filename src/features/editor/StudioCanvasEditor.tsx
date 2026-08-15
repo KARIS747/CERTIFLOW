@@ -113,6 +113,46 @@ export const StudioCanvasEditor: React.FC = () => {
   const [zoomScale, setZoomScale] = useState<number>(0.65);
   const [isExpandedWorkspace, setIsExpandedWorkspace] = useState<boolean>(false);
 
+  // Resizable Panels State (px widths, 0 = hidden)
+  const studioContainerRef = useRef<HTMLDivElement>(null);
+  const [leftPanelWidth, setLeftPanelWidth] = useState<number>(280);
+  const [rightPanelWidth, setRightPanelWidth] = useState<number>(300);
+  const resizingRef = useRef<'left' | 'right' | null>(null);
+  const resizeStartRef = useRef<{ x: number; leftW: number; rightW: number }>({ x: 0, leftW: 280, rightW: 300 });
+
+  const handleResizerMouseDown = (side: 'left' | 'right') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    resizingRef.current = side;
+    resizeStartRef.current = { x: e.clientX, leftW: leftPanelWidth, rightW: rightPanelWidth };
+
+    const onMouseMove = (ev: MouseEvent) => {
+      if (!studioContainerRef.current) return;
+      const containerWidth = studioContainerRef.current.getBoundingClientRect().width;
+      const delta = ev.clientX - resizeStartRef.current.x;
+
+      if (resizingRef.current === 'left') {
+        const newW = Math.min(Math.max(resizeStartRef.current.leftW + delta, 180), containerWidth * 0.35);
+        setLeftPanelWidth(newW);
+      } else if (resizingRef.current === 'right') {
+        const newW = Math.min(Math.max(resizeStartRef.current.rightW - delta, 200), containerWidth * 0.4);
+        setRightPanelWidth(newW);
+      }
+    };
+
+    const onMouseUp = () => {
+      resizingRef.current = null;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
   const applyZoom = (scale: number) => {
     const clamped = Math.min(Math.max(scale, 0.35), 1.5);
     setZoomScale(clamped);
@@ -586,10 +626,14 @@ export const StudioCanvasEditor: React.FC = () => {
       </div>
 
       {/* Main Studio Editor Workspace (Library - Canvas - Inspector) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Toolbar: Elements Library (3 Cols, Hidden if expanded) */}
+      <div ref={studioContainerRef} className="flex gap-0 w-full min-h-0" style={{ height: 'calc(100vh - 260px)', minHeight: 560 }}>
+        {/* Left Toolbar: Elements Library */}
         {!isExpandedWorkspace && (
-          <div className="lg:col-span-3 space-y-4">
+          <div
+            className="flex-shrink-0 overflow-y-auto"
+            style={{ width: leftPanelWidth, minWidth: 180, maxWidth: '35%', transition: resizingRef.current === 'left' ? 'none' : 'width 0.05s' }}
+          >
+            <div className="pr-3 space-y-4 h-full">
             <div className={`p-4 rounded-2xl border space-y-4 shadow-md ${
               isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'
             }`}>
@@ -648,11 +692,30 @@ export const StudioCanvasEditor: React.FC = () => {
                 </div>
               </div>
             </div>
+            </div>
           </div>
         )}
 
-        {/* Center: Canvas A4 Landscape Representation (6 Cols or 9 Cols if Expanded) */}
-        <div className={`${isExpandedWorkspace ? 'lg:col-span-9' : 'lg:col-span-6'} flex flex-col items-center justify-center space-y-3 transition-all duration-300`}>
+        {/* Left Resizer Divider */}
+        {!isExpandedWorkspace && (
+          <div
+            onMouseDown={handleResizerMouseDown('left')}
+            className="group flex-shrink-0 w-2 flex items-center justify-center cursor-col-resize relative z-10"
+            title="Glisser pour redimensionner"
+          >
+            <div className={`w-0.5 h-full rounded-full transition-all group-hover:w-1 group-active:w-1 ${
+              isLight ? 'bg-slate-200 group-hover:bg-indigo-400' : 'bg-slate-700 group-hover:bg-indigo-500'
+            }`} />
+            <div className={`absolute top-1/2 -translate-y-1/2 w-5 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
+              isLight ? 'bg-indigo-100 text-indigo-500' : 'bg-slate-700 text-slate-400'
+            }`}>
+              <span className="text-[9px] leading-none rotate-90 font-bold tracking-widest select-none">⋮⋮</span>
+            </div>
+          </div>
+        )}
+
+        {/* Center: Canvas A4 Landscape Representation */}
+        <div className="flex-1 min-w-0 flex flex-col items-center justify-start space-y-3 overflow-hidden">
           
           {/* Zoom & Workspace Control Bar */}
           <div className={`w-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-2xl border text-xs shadow-md ${
@@ -878,8 +941,28 @@ export const StudioCanvasEditor: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Inspector: Properties Panel (3 Cols) */}
-        <div className="lg:col-span-3 space-y-4">
+        {/* Right Resizer Divider */}
+        <div
+          onMouseDown={handleResizerMouseDown('right')}
+          className="group flex-shrink-0 w-2 flex items-center justify-center cursor-col-resize relative z-10"
+          title="Glisser pour redimensionner"
+        >
+          <div className={`w-0.5 h-full rounded-full transition-all group-hover:w-1 group-active:w-1 ${
+            isLight ? 'bg-slate-200 group-hover:bg-indigo-400' : 'bg-slate-700 group-hover:bg-indigo-500'
+          }`} />
+          <div className={`absolute top-1/2 -translate-y-1/2 w-5 h-10 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${
+            isLight ? 'bg-indigo-100 text-indigo-500' : 'bg-slate-700 text-slate-400'
+          }`}>
+            <span className="text-[9px] leading-none rotate-90 font-bold tracking-widest select-none">⋮⋮</span>
+          </div>
+        </div>
+
+        {/* Right Inspector: Properties Panel */}
+        <div
+          className="flex-shrink-0 overflow-y-auto"
+          style={{ width: rightPanelWidth, minWidth: 200, maxWidth: '40%', transition: resizingRef.current === 'right' ? 'none' : 'width 0.05s' }}
+        >
+          <div className="pl-3 space-y-4 h-full">
           <div className={`p-4 rounded-2xl border space-y-4 shadow-md ${
             isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'
           }`}>
@@ -1030,6 +1113,7 @@ export const StudioCanvasEditor: React.FC = () => {
                 Cliquez sur n'importe quel élément de l'attestation pour le personnaliser.
               </p>
             )}
+          </div>
           </div>
         </div>
       </div>
