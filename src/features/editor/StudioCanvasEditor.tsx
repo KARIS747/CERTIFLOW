@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTemplateStore } from '../../store/useTemplateStore';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useEstablishmentStore } from '../../store/useEstablishmentStore';
@@ -8,6 +8,7 @@ import { useUIStore } from '../../store/useUIStore';
 import { TemplateElement } from '../../types/template';
 import { Student } from '../../types/student';
 import { AVAILABLE_VARIABLES } from '../../lib/utils';
+import { initSmartGuides } from '../../lib/canvasGuides';
 import { 
   resolveVariableText, 
   generateSinglePDFBlob, 
@@ -15,27 +16,17 @@ import {
   createZipArchive, 
   downloadZip 
 } from '../../lib/pdfGenerator';
-import { StepIndicator } from '../../components/common/StepIndicator';
 import { useTheme } from '../../lib/useTheme';
 import { 
   Type, 
-  Variable, 
-  Image as ImageIcon, 
   Square, 
-  Minus, 
   Save, 
   Cpu, 
   Download, 
   User, 
   Trash2, 
-  Lock, 
-  Unlock, 
   Palette, 
-  CheckCircle2, 
   Sparkles, 
-  RefreshCw,
-  Award,
-  Stamp,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -46,7 +37,8 @@ import {
   ArrowRight,
   Crosshair,
   Hand,
-  Move
+  Move,
+  ImageIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
@@ -54,6 +46,7 @@ import { toast } from 'sonner';
 export const StudioCanvasEditor: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { activeTemplate, updateTemplateElements, templates, setActiveTemplateId } = useTemplateStore();
   const { activeProject } = useProjectStore();
@@ -97,6 +90,7 @@ export const StudioCanvasEditor: React.FC = () => {
   const [propBold, setPropBold] = useState<boolean>(false);
   const [propItalic, setPropItalic] = useState<boolean>(false);
   const [propTextAlign, setPropTextAlign] = useState<string>('left');
+  const [propOpacity, setPropOpacity] = useState<number>(1);
 
   // Generation Queue Modal State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -153,8 +147,11 @@ export const StudioCanvasEditor: React.FC = () => {
     document.addEventListener('mouseup', onMouseUp);
   };
 
-  const applyZoom = (scale: number) => {
+  const fitModeRef = useRef(false);
+
+  const applyZoom = (scale: number, isFit = false) => {
     const clamped = Math.min(Math.max(scale, 0.35), 1.5);
+    fitModeRef.current = isFit;
     setZoomScale(clamped);
     if (fabricCanvasRef.current) {
       fabricCanvasRef.current.setZoom(clamped);
@@ -173,7 +170,7 @@ export const StudioCanvasEditor: React.FC = () => {
     const availW = Math.max(vp.clientWidth - 80, 300);
     const availH = Math.max(vp.clientHeight - 56, 200);
     const scale = Math.min(availW / 1123, availH / 794, 1);
-    applyZoom(Math.max(scale, 0.35));
+    applyZoom(Math.max(scale, 0.35), true);
   };
 
   // Directional Smooth Scroll Handler (Left, Right, Up, Down, Center)
@@ -280,6 +277,9 @@ export const StudioCanvasEditor: React.FC = () => {
 
     fabricCanvasRef.current = canvas;
 
+    // Enable Canva-style snapping & alignment/centering guidelines
+    initSmartGuides(canvas);
+
     // Load initial elements from active template
     renderTemplateElements(canvas);
 
@@ -315,6 +315,7 @@ export const StudioCanvasEditor: React.FC = () => {
 
     let raf = 0;
     const ro = new ResizeObserver(() => {
+      if (!fitModeRef.current) return;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => fitToView());
     });
@@ -346,6 +347,7 @@ export const StudioCanvasEditor: React.FC = () => {
           fontWeight: el.fontWeight as any || 'normal',
           fontStyle: (el.fontStyle as any) || 'normal',
           textAlign: el.textAlign || 'center',
+          opacity: el.opacity ?? 1,
           lockScalingX: false,
           lockScalingY: false,
         });
@@ -355,24 +357,26 @@ export const StudioCanvasEditor: React.FC = () => {
         (textObj as any).rawTemplateContent = el.content;
         canvas.add(textObj);
       } else if (el.type === 'rectangle') {
-        const rectObj = new fabric.Rect({
-          left: el.x,
-          top: el.y,
-          width: el.width,
-          height: el.height,
-          fill: el.backgroundColor || 'transparent',
-          stroke: el.borderColor || '#000000',
-          strokeWidth: el.borderWidth || 1,
-          selectable: !el.isLocked,
-        });
+const rectObj = new fabric.Rect({
+      left: el.x,
+      top: el.y,
+      width: el.width,
+      height: el.height,
+      fill: el.backgroundColor || 'transparent',
+      stroke: el.borderColor || '#000000',
+      strokeWidth: el.borderWidth || 1,
+      opacity: el.opacity ?? 1,
+      selectable: !el.isLocked,
+    });
         (rectObj as any).elementId = el.id;
         canvas.add(rectObj);
       } else if (el.type === 'line') {
-        const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
-          stroke: el.backgroundColor || '#000000',
-          strokeWidth: el.height || 2,
-          selectable: !el.isLocked,
-        });
+const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
+      stroke: el.backgroundColor || '#000000',
+      strokeWidth: el.height || 2,
+      opacity: el.opacity ?? 1,
+      selectable: !el.isLocked,
+    });
         (lineObj as any).elementId = el.id;
         canvas.add(lineObj);
       } else if (el.type === 'image' && el.src) {
@@ -380,8 +384,10 @@ export const StudioCanvasEditor: React.FC = () => {
           img.set({
             left: el.x,
             top: el.y,
+            originX: 'center',
             scaleX: el.width / (img.width || 1),
             scaleY: el.height / (img.height || 1),
+            opacity: el.opacity ?? 1,
           });
           (img as any).elementId = el.id;
           canvas.add(img);
@@ -407,6 +413,8 @@ export const StudioCanvasEditor: React.FC = () => {
       setPropItalic(itext.fontStyle === 'italic');
       setPropTextAlign(itext.textAlign || 'left');
     }
+
+    setPropOpacity(obj.opacity ?? 1);
   };
 
   // Add Elements Handlers
@@ -467,6 +475,43 @@ export const StudioCanvasEditor: React.FC = () => {
     toast.success('Bordure dorée insérée.');
   };
 
+  const handleAddImage = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!fabricCanvasRef.current) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      fabric.Image.fromURL(dataUrl, (img) => {
+        const naturalW = img.width || 1;
+        const naturalH = img.height || 1;
+        const targetW = 360;
+        const targetH = 240;
+        const scale = Math.min(targetW / naturalW, targetH / naturalH, 1);
+        img.set({
+          left: 561.5,
+          top: 180,
+          originX: 'center',
+          scaleX: scale,
+          scaleY: scale,
+        });
+        (img as any).elementId = `el-img-${Date.now()}`;
+        (img as any).src = dataUrl;
+        fabricCanvasRef.current!.add(img);
+        fabricCanvasRef.current!.setActiveObject(img);
+        fabricCanvasRef.current!.renderAll();
+        toast.success('Logo / Image importé(e) avec succès !');
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const handleDeleteSelected = () => {
     if (!fabricCanvasRef.current || !selectedObject) return;
     fabricCanvasRef.current.remove(selectedObject);
@@ -495,6 +540,8 @@ export const StudioCanvasEditor: React.FC = () => {
       selectedObject.set('fontStyle' as any, value);
     } else if (key === 'textAlign') {
       selectedObject.set('textAlign' as any, value);
+    } else if (key === 'opacity') {
+      selectedObject.set('opacity', value);
     }
 
     fabricCanvasRef.current.renderAll();
@@ -507,20 +554,23 @@ export const StudioCanvasEditor: React.FC = () => {
     const objects = fabricCanvasRef.current.getObjects();
     const updatedElements: TemplateElement[] = objects.map((obj) => {
       const itext = obj as fabric.IText;
+      const isImage = obj.type === 'image';
       return {
         id: (obj as any).elementId || `el-${Date.now()}`,
         type: obj.type === 'i-text' ? 'text' : (obj.type as any),
         x: Math.round(obj.left || 0),
         y: Math.round(obj.top || 0),
-        width: Math.round(obj.width || 100),
-        height: Math.round(obj.height || 50),
+        width: Math.round((obj.width || 100) * (obj.scaleX || 1)),
+        height: Math.round((obj.height || 50) * (obj.scaleY || 1)),
         content: (obj as any).rawTemplateContent || itext.text || '',
         fontFamily: itext.fontFamily,
         fontSize: itext.fontSize,
         fontWeight: itext.fontWeight as any,
         fontStyle: itext.fontStyle as any,
         color: itext.fill as string,
-        textAlign: itext.textAlign as any,
+        textAlign: isImage ? undefined : itext.textAlign as any,
+        opacity: obj.opacity ?? 1,
+        ...(isImage ? { src: (obj as any).src } : {}),
       };
     });
 
@@ -585,9 +635,6 @@ export const StudioCanvasEditor: React.FC = () => {
 
   return (
     <div className="flex flex-col space-y-3" style={{ height: 'calc(100vh - 150px)', minHeight: 440 }}>
-      {/* Workflow Step Header */}
-      <StepIndicator currentStep={4} />
-
       {/* Top Action & Preview Controls */}
       <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3 rounded-2xl border backdrop-blur-md shadow-md ${
         isLight ? 'bg-white border-slate-200 shadow-slate-200' : 'bg-slate-900/60 border-slate-800'
@@ -695,6 +742,27 @@ export const StudioCanvasEditor: React.FC = () => {
                   <Square className="w-4 h-4 text-amber-500" />
                   Ajouter Cadre / Bordure
                 </button>
+
+                <button
+                  onClick={handleAddImage}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-semibold border transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                      : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4 text-sky-500" />
+                  Importer un Logo / Image
+                </button>
+
+                {/* Hidden file input for image import */}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageFileSelected}
+                />
               </div>
 
               {/* Dynamic Variables Quick Inserter */}
@@ -805,32 +873,6 @@ export const StudioCanvasEditor: React.FC = () => {
                 Ajuster
               </button>
 
-              <button
-                onClick={() => applyZoom(0.75)}
-                className={`px-2.5 py-1 rounded-lg font-semibold text-[11px] border transition-colors ${
-                  zoomScale === 0.75
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : isLight
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                }`}
-              >
-                75% HD
-              </button>
-
-              <button
-                onClick={() => applyZoom(1.0)}
-                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border transition-colors ${
-                  zoomScale === 1.0
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : isLight
-                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
-                      : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
-                }`}
-                title="Afficher en taille réelle 100% Pixel-Perfect Ultra-Net"
-              >
-                💎 100% Taille Réelle HD
-              </button>
               <button
                 onClick={() => setIsPanMode(!isPanMode)}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg border transition-colors text-[11px] font-bold ${
@@ -949,21 +991,6 @@ export const StudioCanvasEditor: React.FC = () => {
                 <Crosshair className="w-3.5 h-3.5" />
                 Centrer
               </button>
-            </div>
-          </div>
-
-          {/* Navigation Helper & Zoom Bar Info */}
-          <div className="w-full flex flex-wrap items-center justify-between gap-2 px-1">
-            <p className={`text-[11px] font-medium flex items-center gap-1.5 ${t.textSecondary}`}>
-              <span>Format A4 Paysage (297 x 210 mm)</span>
-              <span>•</span>
-              <span>Zoom : <strong className="text-indigo-500 font-bold">{Math.round(zoomScale * 100)}%</strong></span>
-            </p>
-
-            <div className={`text-[11px] flex flex-wrap items-center gap-2 ${t.textMuted}`}>
-              <span>💡 <strong>Espace + Glisser</strong> pour naviguer</span>
-              <span>•</span>
-              <span><strong>Shift + Molette</strong> pour défilement horizontal</span>
             </div>
           </div>
         </div>
@@ -1133,6 +1160,31 @@ export const StudioCanvasEditor: React.FC = () => {
                   >
                     I (Italique)
                   </button>
+                </div>
+
+                {/* Opacity */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className={`block text-[11px] font-semibold ${t.textSecondary}`}>
+                      Opacité
+                    </label>
+                    <span className="text-[11px] font-bold text-indigo-500 font-mono">
+                      {Math.round(propOpacity * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={propOpacity}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setPropOpacity(val);
+                      updateSelectedProperty('opacity', val);
+                    }}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
                 </div>
               </div>
             ) : (

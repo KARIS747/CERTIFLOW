@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import jsPDF, { GState } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { Student } from '../types/student';
@@ -121,7 +121,18 @@ export function generateSinglePDFBlob(
         });
       } else if (el.type === 'image' && el.src) {
         try {
-          doc.addImage(el.src, 'PNG', x, y, w, h);
+          const flavor = (el.src.match(/data:(.*?)[;,]/) || [])[1];
+          const format = flavor === 'image/jpeg' ? 'JPEG'
+            : flavor === 'image/webp' ? 'WEBP'
+            : 'PNG';
+          const opacity = el.opacity ?? 1;
+          if (opacity < 1) {
+            doc.setGState(new GState({ opacity }));
+          }
+          doc.addImage(el.src, format, x, y, w, h);
+          if (opacity < 1) {
+            doc.setGState(new GState({ opacity: 1 }));
+          }
         } catch (e) {
           console.warn('Could not add image element to PDF', e);
         }
