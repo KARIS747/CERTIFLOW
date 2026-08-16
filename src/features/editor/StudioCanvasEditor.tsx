@@ -381,6 +381,7 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
         canvas.add(lineObj);
       } else if (el.type === 'image' && el.src) {
         fabric.Image.fromURL(el.src, (img) => {
+          if (fabricCanvasRef.current !== canvas) return;
           img.set({
             left: el.x,
             top: el.y,
@@ -482,12 +483,14 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
   const handleImageFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!fabricCanvasRef.current) return;
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       fabric.Image.fromURL(dataUrl, (img) => {
+        if (fabricCanvasRef.current !== canvas) return;
         const naturalW = img.width || 1;
         const naturalH = img.height || 1;
         const targetW = 360;
@@ -502,9 +505,9 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
         });
         (img as any).elementId = `el-img-${Date.now()}`;
         (img as any).src = dataUrl;
-        fabricCanvasRef.current!.add(img);
-        fabricCanvasRef.current!.setActiveObject(img);
-        fabricCanvasRef.current!.renderAll();
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
         toast.success('Logo / Image importé(e) avec succès !');
       });
     };
