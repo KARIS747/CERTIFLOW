@@ -356,7 +356,7 @@ export const StudioCanvasEditor: React.FC = () => {
         (textObj as any).elementId = el.id;
         (textObj as any).rawTemplateContent = el.content;
         canvas.add(textObj);
-      } else if (el.type === 'rectangle') {
+      } else if (el.type === 'rectangle' || (el.type as string) === 'rect') {
 const rectObj = new fabric.Rect({
       left: el.x,
       top: el.y,
@@ -555,9 +555,14 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
     const updatedElements: TemplateElement[] = objects.map((obj) => {
       const itext = obj as fabric.IText;
       const isImage = obj.type === 'image';
+      const isRect = obj.type === 'rectangle';
+      const isLine = obj.type === 'line';
       return {
         id: (obj as any).elementId || `el-${Date.now()}`,
-        type: obj.type === 'i-text' ? 'text' : (obj.type as any),
+        type:
+          obj.type === 'i-text' ? 'text'
+          : obj.type === 'rect' ? 'rectangle'
+          : (obj.type as any),
         x: Math.round(obj.left || 0),
         y: Math.round(obj.top || 0),
         width: Math.round((obj.width || 100) * (obj.scaleX || 1)),
@@ -569,6 +574,12 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
         fontStyle: itext.fontStyle as any,
         color: itext.fill as string,
         textAlign: isImage ? undefined : itext.textAlign as any,
+        backgroundColor:
+          isRect || isLine
+            ? ((obj as any).fill && (obj as any).fill !== 'transparent' ? (obj as any).fill : undefined)
+            : undefined,
+        borderColor: isRect ? ((obj as any).stroke || undefined) : undefined,
+        borderWidth: isRect ? ((obj as any).strokeWidth || undefined) : undefined,
         opacity: obj.opacity ?? 1,
         ...(isImage ? { src: (obj as any).src } : {}),
       };

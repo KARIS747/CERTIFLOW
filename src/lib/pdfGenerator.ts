@@ -85,7 +85,7 @@ export function generateSinglePDFBlob(
       const w = el.width * scaleX;
       const h = el.height * scaleY;
 
-      if (el.type === 'rectangle') {
+      if (el.type === 'rectangle' || (el.type as string) === 'rect') {
         if (el.backgroundColor && el.backgroundColor !== 'transparent') {
           doc.setFillColor(el.backgroundColor);
           doc.rect(x, y, w, h, 'F');
@@ -102,6 +102,25 @@ export function generateSinglePDFBlob(
       } else if (el.type === 'text' || el.type === 'variable') {
         const textContent = resolveVariableText(el.content || '', student, establishment);
         const lines = textContent.split('\n');
+
+        const fw = el.fontWeight;
+        const isBold =
+          fw === 'bold' ||
+          fw === '600' ||
+          fw === '700' ||
+          fw === '800' ||
+          fw === 600 ||
+          fw === 700 ||
+          fw === 800;
+        const isItalic = el.fontStyle === 'italic';
+
+        // Map to a jsPDF core font: serif for prestige families, sans for the rest
+        const baseFont = ['Cinzel', 'Playfair Display', 'Times'].includes(el.fontFamily || '')
+          ? 'times'
+          : 'helvetica';
+        const fontStyle =
+          isBold && isItalic ? 'bolditalic' : isBold ? 'bold' : isItalic ? 'italic' : 'normal';
+        doc.setFont(baseFont, fontStyle);
 
         doc.setTextColor(el.color || '#000000');
         const fontSizePt = Math.max(8, Math.round((el.fontSize || 14) * 0.75 * scaleY));
