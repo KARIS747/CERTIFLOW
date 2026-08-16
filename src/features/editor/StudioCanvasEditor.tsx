@@ -592,6 +592,27 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
     toast.success('Modèle d\'attestation sauvegardé avec succès !');
   };
 
+  // Substitute a student's variable values onto the live canvas, then return a pixel-perfect snapshot.
+  // This is the WYSIWYG source of truth for exported PDFs (same fonts, weights, borders and placement).
+  const applyStudentSnapshot = (std: Student): string | undefined => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return undefined;
+
+    canvas.getObjects().forEach((obj) => {
+      if (obj.type !== 'i-text' && obj.type !== 'textbox') return;
+      const raw = (obj as any).rawTemplateContent;
+      if (typeof raw === 'string') {
+        const resolved = resolveVariableText(raw, std, establishment);
+        const itext = obj as fabric.IText;
+        if (itext.text !== resolved) {
+          itext.set('text', resolved);
+        }
+      }
+    });
+    canvas.renderAll();
+    return canvas.toDataURL();
+  };
+
   // Bulk PDF Generation Handler
   const handleStartBulkGeneration = async () => {
     if (!activeTemplate) {
@@ -607,30 +628,38 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
 
     const generatedFiles: { fileName: string; pdfBytes: Uint8Array }[] = [];
 
-    for (let i = 0; i < listToGenerate.length; i++) {
-      const std = listToGenerate[i];
+    try {
+      for (let i = 0; i < listToGenerate.length; i++) {
+        const std = listToGenerate[i];
 
-      // Generate pure vector PDF doc for each student
-      const pdfDoc = generateSinglePDFBlob(
-        activeTemplate,
-        std,
-        establishment,
-        undefined
-      );
+        // Render the edited canvas with this student's data and embed it 1:1 in the PDF
+        const canvasDataUrl = applyStudentSnapshot(std);
 
-      const pdfArrayBuffer = pdfDoc.output('arraybuffer');
-      const pdfBytes = new Uint8Array(pdfArrayBuffer);
-      const fileName = computeOutputFileName(
-        activeProject?.outputNamingPattern || '{{nom}}_{{prenom}}_attestation.pdf',
-        std
-      );
+        const pdfDoc = generateSinglePDFBlob(
+          activeTemplate,
+          std,
+          establishment,
+          canvasDataUrl
+        );
 
-      generatedFiles.push({ fileName, pdfBytes });
+        const pdfArrayBuffer = pdfDoc.output('arraybuffer');
+        const pdfBytes = new Uint8Array(pdfArrayBuffer);
+        const fileName = computeOutputFileName(
+          activeProject?.outputNamingPattern || '{{nom}}_{{prenom}}_attestation.pdf',
+          std
+        );
 
-      // Async step to prevent freezing UI
-      setGeneratedCount(i + 1);
-      setGenerationProgress(Math.round(((i + 1) / listToGenerate.length) * 100));
-      await new Promise((res) => setTimeout(res, 30));
+        generatedFiles.push({ fileName, pdfBytes });
+
+        // Async step to prevent freezing UI
+        setGeneratedCount(i + 1);
+        setGenerationProgress(Math.round(((i + 1) / listToGenerate.length) * 100));
+        await new Promise((res) => setTimeout(res, 30));
+      }
+    } finally {
+      // Restore the editor preview to the originally selected student
+      applyStudentSnapshot(currentStudent);
+      fabricCanvasRef.current?.requestRenderAll();
     }
 
     // Zip archive creation
