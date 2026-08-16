@@ -610,7 +610,14 @@ const lineObj = new fabric.Line([el.x, el.y, el.x + el.width, el.y], {
       }
     });
     canvas.renderAll();
-    return canvas.toDataURL();
+
+    // Bake at ~300 DPI so the PDF stays razor-sharp even when zoomed in.
+    // Fabric re-renders objects vectorially for this offscreen grab (text, borders, shapes), so
+    // resolution only affects output crispness, not blur from upscaling.
+    const currentLogicalWidth = canvas.getWidth();
+    const targetWidthPx = (300 / 25.4) * 297; // A4 landscape width @ 300 DPI
+    const multiplier = Math.min(7, Math.max(2, targetWidthPx / currentLogicalWidth));
+    return canvas.toDataURL({ multiplier, enableRetinaScaling: false });
   };
 
   // Bulk PDF Generation Handler
